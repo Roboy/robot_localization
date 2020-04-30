@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(robot_localization)
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fpic")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -31,10 +31,10 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-find_package(PkgConfig REQUIRED)
+#find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML_CPP yaml-cpp)
 
-set(library_name rl_lib)
+#set(library_name rl_lib)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/FromLL.srv"
@@ -58,7 +58,7 @@ include_directories(
 )
 
 add_library(
-  ${library_name}
+  rl_lib
   src/ekf.cpp
   src/ukf.cpp
   src/filter_base.cpp
@@ -69,7 +69,7 @@ add_library(
   src/ros_filter_utilities.cpp
   src/ros_robot_localization_listener.cpp)
 
-rosidl_target_interfaces(${library_name}
+rosidl_target_interfaces(rl_lib
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 add_executable(
@@ -93,13 +93,13 @@ add_executable(
 )
 
 target_link_libraries(
-  ${library_name}
+  rl_lib
   ${EIGEN3_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
 )
 
 ament_target_dependencies(
-  ${library_name}
+  rl_lib
   diagnostic_msgs
   diagnostic_updater
   geographic_msgs
@@ -118,7 +118,7 @@ ament_target_dependencies(
 
 target_link_libraries(
   ekf_node
-  ${library_name}
+  rl_lib
 )
 
 ament_target_dependencies(
@@ -128,7 +128,7 @@ ament_target_dependencies(
 
 target_link_libraries(
   ukf_node
-  ${library_name}
+  rl_lib
 )
 
 ament_target_dependencies(
@@ -138,7 +138,7 @@ ament_target_dependencies(
 
 target_link_libraries(
   navsat_transform_node
-  ${library_name}
+  rl_lib
 )
 
 ament_target_dependencies(
@@ -148,7 +148,7 @@ ament_target_dependencies(
 
 target_link_libraries(
   robot_localization_listener_node
-  ${library_name}
+  rl_lib
 )
 
 ament_target_dependencies(
@@ -156,7 +156,7 @@ ament_target_dependencies(
   rclcpp
 )
 
-if(BUILD_TESTING)
+#if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_cppcheck REQUIRED)
   find_package(ament_cmake_cpplint REQUIRED)
@@ -166,12 +166,12 @@ if(BUILD_TESTING)
 
   #### FILTER BASE TESTS ####
   ament_add_gtest(filter_base-test test/test_filter_base.cpp)
-  target_link_libraries(filter_base-test ${library_name})
+  target_link_libraries(filter_base-test rl_lib)
 
   #### DIAGNOSTICS TESTS ####
   ament_add_gtest_executable(test_filter_base_diagnostics_timestamps
                     test/test_filter_base_diagnostics_timestamps.cpp)
-  target_link_libraries(test_filter_base_diagnostics_timestamps ${library_name})
+  target_link_libraries(test_filter_base_diagnostics_timestamps rl_lib)
   add_dependencies(test_filter_base_diagnostics_timestamps ekf_node)
   ament_add_test(test_filter_base_diagnostics_timestamps
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
@@ -182,11 +182,11 @@ if(BUILD_TESTING)
 
   #### EKF TESTS ######
   ament_add_gtest(test_ekf test/test_ekf.cpp)
-  target_link_libraries(test_ekf ${library_name})
+  target_link_libraries(test_ekf rl_lib)
 
   ament_add_gtest_executable(test_ekf_localization_node_interfaces
                     test/test_ekf_localization_node_interfaces.cpp)
-  target_link_libraries(test_ekf_localization_node_interfaces ${library_name})
+  target_link_libraries(test_ekf_localization_node_interfaces rl_lib)
   add_dependencies(test_ekf_localization_node_interfaces ekf_node)
   ament_add_test(test_ekf_localization_node_interfaces
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
@@ -197,12 +197,12 @@ if(BUILD_TESTING)
 
   #### UKF TESTS #####
   ament_add_gtest(test_ukf test/test_ukf.cpp)
-  target_link_libraries(test_ukf ${library_name})
+  target_link_libraries(test_ukf rl_lib)
 
 
   ament_add_gtest_executable(test_ukf_localization_node_interfaces
                     test/test_ukf_localization_node_interfaces.cpp)
-  target_link_libraries(test_ukf_localization_node_interfaces ${library_name})
+  target_link_libraries(test_ukf_localization_node_interfaces rl_lib)
   add_dependencies(test_ukf_localization_node_interfaces ekf_node)
   ament_add_test(test_ukf_localization_node_interfaces
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
@@ -213,27 +213,27 @@ if(BUILD_TESTING)
 
   #### DATA TESTS #####
 #  ament_add_gtest(test_ekf_localization_node_bag1 test/test_localization_node_bag_pose_tester.cpp)
-#  target_link_libraries(test_ekf_localization_node_bag1 ${library_name})
+#  target_link_libraries(test_ekf_localization_node_bag1 rl_lib)
 
 #  ament_add_gtest(test_ekf_localization_node_bag2 test/test_localization_node_bag_pose_tester.cpp)
-#  target_link_libraries(test_ekf_localization_node_bag2 ${library_name})
+#  target_link_libraries(test_ekf_localization_node_bag2 rl_lib)
 
 #  ament_add_gtest(test_ekf_localization_node_bag3 test/test_localization_node_bag_pose_tester.cpp)
-#  target_link_libraries(test_ekf_localization_node_bag3 ${library_name})
+#  target_link_libraries(test_ekf_localization_node_bag3 rl_lib)
 
 #  ament_add_gtest(test_ukf_localization_node_bag1 test/test_localization_node_bag_pose_tester.cpp)
-#  target_link_libraries(test_ukf_localization_node_bag1 ${library_name})
+#  target_link_libraries(test_ukf_localization_node_bag1 rl_lib)
 
 #  ament_add_gtest(test_ukf_localization_node_bag2 test/test_localization_node_bag_pose_tester.cpp)
-#  target_link_libraries(test_ukf_localization_node_bag2 ${library_name})
+#  target_link_libraries(test_ukf_localization_node_bag2 rl_lib)
 
 #  ament_add_gtest(test_ukf_localization_node_bag3 test/test_localization_node_bag_pose_tester.cpp)
-#  target_link_libraries(test_ukf_localization_node_bag3 ${library_name})
+#  target_link_libraries(test_ukf_localization_node_bag3 rl_lib)
 
   #### RLE/RLL TESTS #####
   ament_add_gtest_executable(test_robot_localization_estimator
                   test/test_robot_localization_estimator.cpp)
-  target_link_libraries(test_robot_localization_estimator ${library_name})
+  target_link_libraries(test_robot_localization_estimator rl_lib)
   ament_add_test(test_robot_localization_estimator
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
     TIMEOUT 100
@@ -243,10 +243,10 @@ if(BUILD_TESTING)
 
   ament_add_gtest_executable(test_ros_robot_localization_listener
                   test/test_ros_robot_localization_listener.cpp)
-  target_link_libraries(test_ros_robot_localization_listener ${library_name})
+  target_link_libraries(test_ros_robot_localization_listener rl_lib)
   ament_add_gtest_executable(test_ros_robot_localization_listener_publisher
                   test/test_ros_robot_localization_listener_publisher.cpp)
-  target_link_libraries(test_ros_robot_localization_listener_publisher ${library_name})
+  target_link_libraries(test_ros_robot_localization_listener_publisher rl_lib)
   ament_add_test(test_ros_robot_localization_listener
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
     TIMEOUT 100
@@ -285,7 +285,7 @@ if(BUILD_TESTING)
     DESTINATION share/${PROJECT_NAME}
     USE_SOURCE_PERMISSIONS
   )
-endif()
+#endif()
 
 install(
   TARGETS
@@ -293,8 +293,13 @@ install(
   ekf_node
   ukf_node
   robot_localization_listener_node
-  ${library_name}
-  DESTINATION lib/${PROJECT_NAME}
+  rl_lib
+  DESTINATION lib/${PROJECT_NAME}}
+)
+install(
+        TARGETS
+        rl_lib
+        DESTINATION lib
 )
 
 # Install params config files.
@@ -305,6 +310,11 @@ install(DIRECTORY
   USE_SOURCE_PERMISSIONS
 )
 
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION include/${PROJECT_NAME}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+        PATTERN ".git" EXCLUDE)
+
 ament_export_include_directories(include)
-ament_export_libraries(${library_name})
+ament_export_libraries(rl_lib)
 ament_package()
